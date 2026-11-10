@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Topic, Entry
 from .forms import TopicForm, EntryForm
 from django.contrib.auth.decorators import login_required
@@ -19,7 +19,7 @@ def topics(request):
 @login_required
 def topic(request, topic_id):
     """display a certain topic with all of the items below it"""
-    topic = Topic.objects.get(id = topic_id)
+    topic = get_object_or_404(Topic, id = topic_id)
     # ensure the requested schame belongs to current user
     if topic.owner != request.user:raise Http404
     entries = topic.entry_set.order_by('-date_added')
@@ -47,7 +47,9 @@ def new_topic(request):
 @login_required
 def new_entry(request, topic_id):
     # add the items under certain topic
-    topic = Topic.objects.get(id=topic_id)
+    topic = get_object_or_404(Topic, id = topic_id)
+    if topic.owner != request.user: # Make sure the topic belongs to the current user
+        raise Http404
     if request.method != 'POST':
         # create a blank form when on date is submitted
         form = EntryForm()
@@ -66,7 +68,7 @@ def new_entry(request, topic_id):
 @login_required
 def edit_entry(request, entry_id):
     # edit the exiting items
-    entry = Entry.objects.get(id=entry_id)
+    entry = get_object_or_404(Entry, id=entry_id)
     topic = entry.topic
     if topic.owner != request.user: raise Http404
     if request.method != 'POST':
